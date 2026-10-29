@@ -1,0 +1,23 @@
+{
+  "name": "sistem-nilai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Setup database sistem nilai",
+  "scripts": {
+    "seed": "node db/seed.js",
+    "start:gateway": "node gateway/index.js",
+    "start:nilai": "node service-nilai/index.js",
+    "start:transkrip": "node service-transkrip/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "http-proxy-middleware": "^3.0.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

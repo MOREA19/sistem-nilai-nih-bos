@@ -1,0 +1,56 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('admin', 'dosen', 'mahasiswa')),
+  nim TEXT UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS devices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  device_id TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS kelas (
+  id TEXT PRIMARY KEY,
+  nama TEXT NOT NULL,
+  dosen_id INTEGER NOT NULL REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS nilai (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kelas_id TEXT NOT NULL REFERENCES kelas(id) ON DELETE CASCADE,
+  nim TEXT NOT NULL REFERENCES users(nim) ON DELETE CASCADE,
+  nilai REAL NOT NULL CHECK (nilai >= 0 AND nilai <= 100),
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'final')),
+  UNIQUE (kelas_id, nim)
+);
+
+CREATE TABLE IF NOT EXISTS transkrip (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nim TEXT NOT NULL REFERENCES users(nim) ON DELETE CASCADE,
+  kelas_id TEXT NOT NULL REFERENCES kelas(id) ON DELETE CASCADE,
+  nilai REAL NOT NULL CHECK (nilai >= 0 AND nilai <= 100),
+  UNIQUE (nim, kelas_id)
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL,
+  revoked INTEGER NOT NULL DEFAULT 0 CHECK (revoked IN (0, 1))
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  waktu TEXT NOT NULL,
+  subjek TEXT NOT NULL,
+  endpoint TEXT NOT NULL,
+  device TEXT,
+  hasil TEXT NOT NULL,
+  alasan TEXT NOT NULL
+);
