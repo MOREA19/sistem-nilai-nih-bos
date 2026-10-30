@@ -1,3 +1,11 @@
 node_modules/
 .env
 *.db
+*.db-journal
+.postman/
+*.log
+log/
+logs/
+.DS_Store
+Thumbs.db
+.vscode/

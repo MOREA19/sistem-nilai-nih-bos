@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="id">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="color-scheme" content="light">
+	<title>Sistem Informasi Nilai - Informatika</title>
+	<link rel="stylesheet" href="/css/style.css?v=5">
+	<script type="module" src="/js/main.js"></script>
+</head>
+<body>
+	<div class="app-shell">
+		<header class="topbar">
+			<a class="brand" href="#/nilai">Sistem Informasi Nilai <span>- Informatika</span></a>
+			<div class="session-meta">
+				<div class="identity"><span class="meta-label">Pengguna</span><strong id="header-user">Belum masuk</strong></div>
+				<div class="identity"><span class="meta-label">Peran</span><strong id="header-role">ANONIM</strong></div>
+				<div class="identity"><span class="meta-label">Perangkat</span><strong id="header-device">—</strong></div>
+				<div class="identity token-identity"><span class="meta-label"><span id="token-icon" class="inline-icon"></span>Sisa token</span><strong id="token-clock" class="mono">—</strong></div>
+				<div id="logout-host" class="logout-host"></div>
+			</div>
+		</header>
+		<div id="session-banner" class="session-banner" role="status" hidden>Sesi berakhir, masuk kembali</div>
+		<div class="workspace">
+			<aside class="sidebar" aria-label="Navigasi utama">
+				<nav id="sidebar-nav"></nav>
+				<div class="sidebar-foot">REGISTRASI AKADEMIK<br>INFORMATIKA</div>
+			</aside>
+			<main id="page-content" class="content" tabindex="-1"></main>
+		</div>
+		<details id="response-drawer" class="response-panel">
+			<summary><span id="response-icon" class="inline-icon"></span>Respons Gateway <span class="response-status" id="response-status">Belum ada request</span></summary>
+			<div class="response-meta"><span id="response-method" class="response-method">—</span><code id="response-url">—</code></div>
+			<div class="response-columns">
+				<div><h3>Request JSON (rahasia disamarkan)</h3><pre id="response-request">(belum ada request)</pre></div>
+				<div><h3>Respons JSON</h3><pre id="response-body">(belum ada respons)</pre></div>
+			</div>
+		</details>
+	</div>
+</body>
+</html>

@@ -5,7 +5,13 @@
   "description": "Setup database sistem nilai",
   "scripts": {
     "seed": "node db/seed.js",
+    "build:web": "tsc -p gateway/web/tsconfig.json",
+    "watch:web": "tsc -w -p gateway/web/tsconfig.json",
+    "assets": "node scripts/copy-assets.js",
+    "prestart:gateway": "npm run assets && npm run build:web",
     "start:gateway": "node gateway/index.js",
+    "prestart:all": "npm run assets && npm run build:web",
+    "start:all": "node scripts/start-all.js",
     "start:nilai": "node service-nilai/index.js",
     "start:transkrip": "node service-transkrip/index.js"
   },
@@ -19,5 +25,11 @@
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3",
     "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "lucide-static": "^1.64.0",
+    "typescript": "^7.0.2"
   }
 }

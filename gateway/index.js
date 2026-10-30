@@ -10,6 +10,9 @@ const { putuskan } = require('./policy');
 const app = express();
 const port = Number(process.env.PORT_GATEWAY || 3000);
 
+// Folder ini hanya berisi shell UI dan aset publik, tidak memuat data sensitif.
+app.use(express.static(require('node:path').join(__dirname, 'public')));
+
 // Parse JSON sebelum handler autentikasi membaca kredensial dari body.
 app.use(express.json({ limit: '32kb' }));
 

@@ -1,0 +1,195 @@
+{
+  "info": {
+    "_postman_id": "4bd512b1-6720-4ed1-87bd-13ecb8180001",
+    "name": "Sistem Nilai Zero Trust - 14 Skenario",
+    "description": "Collection demo sesuai role, endpoint, dan data seed. Jalankan berurutan dari skenario 01 sampai 14. Sebelum menjalankan, aktifkan tiga service, salin .env.example ke .env, dan samakan serviceClientSecret pada environment ini dengan SERVICE_CLIENT_SECRET. Request update/finalisasi hanya allow selama JAM_MULAI sampai sebelum JAM_SELESAI.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Skenario 01 - Login mahasiswa valid",
+      "item": [
+        {
+          "name": "[ALLOW] Login mhs1 dengan device terdaftar",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Login berhasil', function () { pm.response.to.have.status(200); });","const data = pm.response.json();","pm.environment.set('mhs1AccessToken', data.access_token);","pm.environment.set('mhs1RefreshToken', data.refresh_token);","pm.test('Token access dan refresh tersedia', function () { pm.expect(data.access_token).to.be.a('string'); pm.expect(data.refresh_token).to.be.a('string'); });"]}}],
+          "request": {"method":"POST","header":[{"key":"X-Device-ID","value":"{{deviceMhs1}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"username\": \"{{usernameMhs1}}\",\n  \"password\": \"{{passwordMhs1}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/login"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 02 - Kredensial atau device salah",
+      "item": [
+        {
+          "name": "[DENY] Login mhs1 dengan password salah",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Password salah ditolak', function () { pm.response.to.have.status(401); });"]}}],
+          "request": {"method":"POST","header":[{"key":"X-Device-ID","value":"{{deviceMhs1}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"username\": \"{{usernameMhs1}}\",\n  \"password\": \"password-salah\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/login"}
+        },
+        {
+          "name": "[DENY] Login mhs1 dari device tidak terdaftar",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Device tidak terdaftar ditolak', function () { pm.response.to.have.status(401); });"]}}],
+          "request": {"method":"POST","header":[{"key":"X-Device-ID","value":"DEV-TIDAK-TERDAFTAR"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"username\": \"{{usernameMhs1}}\",\n  \"password\": \"{{passwordMhs1}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/login"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 03 - Mahasiswa melihat nilai sendiri",
+      "item": [
+        {
+          "name": "[ALLOW] GET nilai milik mhs1 dan simpan ID nilai seed",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Nilai sendiri diizinkan', function () { pm.response.to.have.status(200); });","const data = pm.response.json().data;","pm.test('Semua nilai hanya untuk NIM sendiri', function () { pm.expect(data.length).to.be.above(0); data.forEach(function (item) { pm.expect(item.nim).to.eql(pm.environment.get('nimMhs1')); }); });","const if101 = data.find(function (item) { return item.kelas_id === pm.environment.get('kelasIF101'); });","const if202 = data.find(function (item) { return item.kelas_id === pm.environment.get('kelasIF202'); });","pm.test('ID nilai seed berhasil ditemukan secara dinamis', function () { pm.expect(if101).to.exist; pm.expect(if202).to.exist; });","pm.environment.set('nilaiMhs1IF101', String(if101.id));","pm.environment.set('nilaiMhs1IF202', String(if202.id));"]}}],
+          "request": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{mhs1AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceMhs1}}"}],"url":"{{base}}/nilai"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 04 - Transkrip milik mahasiswa",
+      "item": [
+        {
+          "name": "[ALLOW] GET transkrip mhs1 sendiri",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Transkrip sendiri diizinkan', function () { pm.response.to.have.status(200); });","pm.test('NIM respons adalah pemilik token', function () { pm.expect(pm.response.json().nim).to.eql(pm.environment.get('nimMhs1')); });"]}}],
+          "request": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{mhs1AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceMhs1}}"}],"url":"{{base}}/transkrip/{{nimMhs1}}"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 05 - Isolasi mahasiswa dan device request",
+      "item": [
+        {
+          "name": "[ALLOW] Login mhs2 untuk validasi pemilik kedua",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Login mhs2 berhasil', function () { pm.response.to.have.status(200); });","pm.environment.set('mhs2AccessToken', pm.response.json().access_token);"]}}],
+          "request": {"method":"POST","header":[{"key":"X-Device-ID","value":"{{deviceMhs2}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"username\": \"{{usernameMhs2}}\",\n  \"password\": \"{{passwordMhs2}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/login"}
+        },
+        {
+          "name": "[DENY] mhs2 meminta transkrip mhs1",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Akses NIM mahasiswa lain ditolak', function () { pm.response.to.have.status(403); });"]}}],
+          "request": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{mhs2AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceMhs2}}"}],"url":"{{base}}/transkrip/{{nimMhs1}}"}
+        },
+        {
+          "name": "[DENY] Request mhs1 tanpa X-Device-ID",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Request tanpa device terdaftar ditolak', function () { pm.response.to.have.status(403); });"]}}],
+          "request": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{mhs1AccessToken}}"}],"url":"{{base}}/nilai"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 06 - Siklus refresh dan logout",
+      "item": [
+        {
+          "name": "[ALLOW] Refresh access token mhs1",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Refresh token valid diterima', function () { pm.response.to.have.status(200); });","pm.environment.set('mhs1AccessToken', pm.response.json().access_token);"]}}],
+          "request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"refresh_token\": \"{{mhs1RefreshToken}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/refresh"}
+        },
+        {
+          "name": "[ALLOW] Logout dan cabut refresh token mhs1",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Logout berhasil', function () { pm.response.to.have.status(200); });"]}}],
+          "request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"refresh_token\": \"{{mhs1RefreshToken}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/logout"}
+        },
+        {
+          "name": "[DENY] Refresh token setelah logout",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Refresh token yang dicabut ditolak', function () { pm.response.to.have.status(401); });"]}}],
+          "request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"refresh_token\": \"{{mhs1RefreshToken}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/refresh"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 07 - Token service",
+      "item": [
+        {
+          "name": "[ALLOW] Minta token service-nilai",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Client service valid diterima', function () { pm.response.to.have.status(200); });","pm.environment.set('serviceAccessToken', pm.response.json().access_token);"]}}],
+          "request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"client_id\": \"{{serviceClientId}}\",\n  \"client_secret\": \"{{serviceClientSecret}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/service"}
+        },
+        {
+          "name": "[DENY] Minta token service dengan secret salah",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Client secret salah ditolak', function () { pm.response.to.have.status(401); });"]}}],
+          "request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"client_id\": \"{{serviceClientId}}\",\n  \"client_secret\": \"secret-salah\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/service"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 08 - Login dosen",
+      "item": [
+        {
+          "name": "[ALLOW] Login dosen1",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Login dosen1 berhasil', function () { pm.response.to.have.status(200); });","pm.environment.set('dosen1AccessToken', pm.response.json().access_token);"]}}],
+          "request": {"method":"POST","header":[{"key":"X-Device-ID","value":"{{deviceDosen1}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"username\": \"{{usernameDosen1}}\",\n  \"password\": \"{{passwordDosen1}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/login"}
+        },
+        {
+          "name": "[ALLOW] Login dosen2",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Login dosen2 berhasil', function () { pm.response.to.have.status(200); });","pm.environment.set('dosen2AccessToken', pm.response.json().access_token);"]}}],
+          "request": {"method":"POST","header":[{"key":"X-Device-ID","value":"{{deviceDosen2}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"username\": \"{{usernameDosen2}}\",\n  \"password\": \"{{passwordDosen2}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/login"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 09 - Dosen membaca kelas ampuan",
+      "item": [
+        {
+          "name": "[ALLOW] dosen1 GET nilai kelas IF101",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Dosen pengampu dapat membaca kelas', function () { pm.response.to.have.status(200); });","pm.response.json().data.forEach(function (item) { pm.expect(item.kelas_id).to.eql(pm.environment.get('kelasIF101')); });"]}}],
+          "request": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{dosen1AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceDosen1}}"}],"url":"{{base}}/nilai?kelas_id={{kelasIF101}}"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 10 - Dosen tidak boleh membaca kelas dosen lain",
+      "item": [
+        {
+          "name": "[DENY] dosen2 meminta kelas IF101 milik dosen1",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Kelas dosen lain ditolak', function () { pm.response.to.have.status(403); });"]}}],
+          "request": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{dosen2AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceDosen2}}"}],"url":"{{base}}/nilai?kelas_id={{kelasIF101}}"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 11 - Dosen mengubah nilai draft ampuannya",
+      "item": [
+        {
+          "name": "[ALLOW] dosen1 mengubah nilai mhs1 di IF101",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Dosen dapat mengubah nilai draft ampuannya', function () { pm.response.to.have.status(200); });"]}}],
+          "request": {"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{dosen1AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceDosen1}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"nilai\": 86\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/nilai/{{nilaiMhs1IF101}}"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 12 - Dosen tidak boleh mengubah nilai kelas lain",
+      "item": [
+        {
+          "name": "[DENY] dosen1 mengubah nilai mhs1 di IF202 milik dosen2",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Perubahan nilai kelas lain ditolak', function () { pm.response.to.have.status(403); });"]}}],
+          "request": {"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{dosen1AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceDosen1}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"nilai\": 99\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/nilai/{{nilaiMhs1IF202}}"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 13 - Finalisasi dan sinkronisasi transkrip",
+      "item": [
+        {
+          "name": "[ALLOW] dosen1 finalisasi IF101 dan sinkronkan transkrip",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Finalisasi dan sinkronisasi berhasil', function () { pm.response.to.have.status(200); });","const body = pm.response.json();","pm.test('Tiga nilai seed tersinkron', function () { pm.expect(body.sinkronisasi.jumlah).to.eql(3); });"]}}],
+          "request": {"method":"POST","header":[{"key":"Authorization","value":"Bearer {{dosen1AccessToken}}"},{"key":"X-Device-ID","value":"{{deviceDosen1}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{}","options":{"raw":{"language":"json"}}},"url":"{{base}}/kelas/{{kelasIF101}}/finalisasi"}
+        }
+      ]
+    },
+    {
+      "name": "Skenario 14 - Admin dan penolakan sinkronisasi token user",
+      "item": [
+        {
+          "name": "[ALLOW] Login admin",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Login admin berhasil', function () { pm.response.to.have.status(200); });","pm.environment.set('adminAccessToken', pm.response.json().access_token);"]}}],
+          "request": {"method":"POST","header":[{"key":"X-Device-ID","value":"{{deviceAdmin}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"username\": \"{{usernameAdmin}}\",\n  \"password\": \"{{passwordAdmin}}\"\n}","options":{"raw":{"language":"json"}}},"url":"{{base}}/auth/login"}
+        },
+        {
+          "name": "[ALLOW] Admin membaca transkrip mhs3",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Admin dapat membaca transkrip mahasiswa mana pun', function () { pm.response.to.have.status(200); });","pm.test('NIM yang diminta sesuai', function () { pm.expect(pm.response.json().nim).to.eql(pm.environment.get('nimMhs3')); });"]}}],
+          "request": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminAccessToken}}"},{"key":"X-Device-ID","value":"{{deviceAdmin}}"}],"url":"{{base}}/transkrip/{{nimMhs3}}"}
+        },
+        {
+          "name": "[DENY] Token mahasiswa mencoba sinkronisasi transkrip",
+          "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Token user ditolak dari endpoint sinkronisasi', function () { pm.response.to.have.status(403); });"]}}],
+          "request": {"method":"POST","header":[{"key":"Authorization","value":"Bearer {{mhs1AccessToken}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"[]","options":{"raw":{"language":"json"}}},"url":"{{base}}/transkrip/sinkron"}
+        }
+      ]
+    }
+  ]
+}
